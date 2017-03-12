@@ -1,0 +1,62 @@
+{
+  "name": "LayoutEngine",
+  "version": "0.0.1",
+  "description": "Layout engine",
+  "author": "Wil Shotton",
+  "main": "src/layout-engine/layout-engine.jsx",
+  "scripts": {
+    "start": "webpack-dev-server",
+    "dev": "webpack",
+    "test": "jest --verbose --watch",
+    "prod": "webpack --config webpack-production.config.js -p --progress"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "coverageDirectory": "./coverage",
+    "collectCoverageFrom": [
+      "**/*.{js,jsx}",
+      "!**/build/**",
+      "!**/node_modules/**",
+      "!**/vendor/**"
+    ]
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "autoprefixer": "^6.6.0",
+    "babel-core": "^6.7.2",
+    "babel-eslint": "^7.1.0",
+    "babel-jest": "^18.0.0",
+    "babel-loader": "^6.2.4",
+    "babel-plugin-transform-class-properties": "^6.6.0",
+    "babel-plugin-transform-decorators": "^6.13.0",
+    "babel-plugin-transform-decorators-legacy": "^1.3.4",
+    "babel-plugin-transform-runtime": "^6.6.0",
+    "babel-preset-es2015": "^6.22.0",
+    "babel-preset-react": "^6.22.0",
+    "babel-preset-react-hmre": "^1.1.1",
+    "babel-preset-stage-0": "^6.22.0",
+    "babel-preset-stage-1": "^6.22.0",
+    "babel-runtime": "^6.6.1",
+    "css-loader": "^0.26.1",
+    "enzyme": "^2.7.1",
+    "extract-text-webpack-plugin": "^2.0.0-beta.4",
+    "html-webpack-plugin": "^2.24.1",
+    "jest": "^18.1.0",
+    "js-sass-loader": "git://github.com/WilShotton/js-sass-loader.git#master",
+    "node-sass": "^4.1.1",
+    "postcss-loader": "^1.2.1",
+    "react-addons-test-utils": "^15.4.2",
+    "react-test-renderer": "^15.4.2",
+    "sass-loader": "^4.1.1",
+    "style-loader": "^0.13.1",
+    "webpack": "^2.2.0-rc.1",
+    "webpack-dev-server": "^2.2.0-rc.0"
+  },
+  "dependencies": {
+    "lodash": "^4.17.2",
+    "react": "^15.4.1",
+    "react-dom": "^15.4.1",
+    "react-popout": "^0.6.0",
+    "rxjs": "^5.0.3"
+  }
+}
