@@ -13,58 +13,64 @@ class LayoutGroup extends RxComponent{
 
         super(props)
 
-        this.createHandlers(['resizeContent', 'resizeWidth'])
+        this.createHandlers(['resizeContent', 'resizeBounds'])
 
         this.state = {
+            bounds: {},
             isResizing: false,
-            metrics: {},
-            width: 0
+            metrics: {}
         }
     }
 
     componentDidMount() {
 
-        const width$ = Rx.Observable
+        const bounds$ = Rx.Observable
             .merge(
 
                 this.propAsStream('bounds')
-                    .pluck('width')
-                    .map(update => current => {
+                    .map(bounds => () => {
 
-                        return {snapshot: update, value: update}
+                        return {snapshot: bounds, bounds}
                     }),
 
-                this.event('resizeWidth')
-                    .map(update => current => {
+                this.event('resizeBounds')
+                    .map(() => current => {
 
-                        return {...current, snapshot: current.value}
+                        return {...current, snapshot: current.bounds}
                     }),
 
-                this.event('resizeWidth')
-                    .pluck('clientX')
-                    .switchMap(initial => {
+                this.event('resizeBounds')
+                    .switchMap(({iX, iY}) => {
 
                         return Rx.Observable.fromEvent(document, 'mousemove')
                             .observeOn(Rx.Scheduler.animationFrame)
                             .takeUntil(Rx.Observable.fromEvent(document, 'mouseup'))
-                            .pluck('clientX')
-                            .map(current => {
+                            .map(e => {
 
-                                return current - initial
+                                return {
+                                    dX: e.clientX - iX,
+                                    dY: e.clientY - iY
+                                }
                             })
                     })
                     .map(update => current => {
 
-                        return {...current, value: Math.max(
-                            current.snapshot + update,
-                            MIN_MEASURE
-                        )}
+                        return {...current, bounds: _.pickBy({
+                            width: Math.max(
+                                current.snapshot.width + update.dX,
+                                MIN_MEASURE
+                            ),
+                            height: Math.max(
+                                current.snapshot.height + update.dY,
+                                MIN_MEASURE
+                            )
+                        }, _.isFinite)}
                     })
 
             )
             .scan((acc, update) => update(acc), {})
-            .pluck('value')
-            .map(width => ({width}))
+            .pluck('bounds')
+            .map(bounds => ({bounds}))
 
         const metrics$ = Rx.Observable
             .merge(
@@ -122,7 +128,7 @@ class LayoutGroup extends RxComponent{
 
         const resizeStart$ = Rx.Observable.merge(
             this.event('resizeContent'),
-            this.event('resizeWidth')
+            this.event('resizeBounds')
         )
 
         const resizeFinish$ = resizeStart$.flatMap(() => {
@@ -136,22 +142,21 @@ class LayoutGroup extends RxComponent{
 
         this.addDisposables(
 
+            bounds$.subscribe(this.stateObserver),
             isResizing$.subscribe(this.stateObserver),
-            metrics$.subscribe(this.stateObserver),
-            width$.subscribe(this.stateObserver)
+            metrics$.subscribe(this.stateObserver)
         )
     }
 
     render() {
 
-        const { bounds, layout } = this.props
+        const { layout } = this.props
 
-        const { isResizing, metrics, width } = this.state
+        const { bounds, isResizing, metrics } = this.state
 
         return (
             <div className="layout-group" style={{
                 ...bounds,
-                width,
                 userSelect: isResizing ? 'none' : 'auto'
             }}>
 
@@ -163,7 +168,7 @@ class LayoutGroup extends RxComponent{
                                 key: index,
                                 style: {
                                     height: metric.measure,
-                                    width
+                                    width: bounds.width
                                 }
                             }),
                             React.createElement(Resizer, {
@@ -191,7 +196,7 @@ class LayoutGroup extends RxComponent{
                         opacity: 0.5
                     },
 
-                    onMouseDown: this.on.resizeWidth
+                    onMouseDown: e => this.on.resizeBounds({iX: e.clientX})
 
                 }} />
 
