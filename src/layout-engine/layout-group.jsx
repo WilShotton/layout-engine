@@ -16,6 +16,7 @@ class LayoutGroup extends RxComponent{
         this.createHandlers(['resizeContent', 'resizeWidth'])
 
         this.state = {
+            isResizing: false,
             metrics: {},
             width: 0
         }
@@ -33,7 +34,7 @@ class LayoutGroup extends RxComponent{
                         return {snapshot: update, value: update}
                     }),
 
-                this.event('resizeContent')
+                this.event('resizeWidth')
                     .map(update => current => {
 
                         return {...current, snapshot: current.value}
@@ -52,7 +53,6 @@ class LayoutGroup extends RxComponent{
                                 return current - initial
                             })
                     })
-                    .do(v => console.log('resizeWidth', v))
                     .map(update => current => {
 
                         return {...current, value: Math.max(
@@ -65,8 +65,6 @@ class LayoutGroup extends RxComponent{
             .scan((acc, update) => update(acc), {})
             .pluck('value')
             .map(width => ({width}))
-            .do(v => console.log('resizeWidth', v))
-            // .subscribe(() => {})
 
         const metrics$ = Rx.Observable
             .merge(
@@ -122,8 +120,23 @@ class LayoutGroup extends RxComponent{
             .pluck('values')
             .map(metrics => ({metrics}))
 
+        const resizeStart$ = Rx.Observable.merge(
+            this.event('resizeContent'),
+            this.event('resizeWidth')
+        )
+
+        const resizeFinish$ = resizeStart$.flatMap(() => {
+            return Rx.Observable.fromEvent(document, 'mouseup').take(1)
+        })
+
+        const isResizing$ = Rx.Observable
+            .merge(resizeStart$.mapTo(true), resizeFinish$.mapTo(false))
+            .startWith(false)
+            .map(isResizing => ({isResizing}))
+
         this.addDisposables(
 
+            isResizing$.subscribe(this.stateObserver),
             metrics$.subscribe(this.stateObserver),
             width$.subscribe(this.stateObserver)
         )
@@ -133,10 +146,14 @@ class LayoutGroup extends RxComponent{
 
         const { bounds, layout } = this.props
 
-        const { metrics, width } = this.state
+        const { isResizing, metrics, width } = this.state
 
         return (
-            <div className="layout-group" style={{...bounds, width}}>
+            <div className="layout-group" style={{
+                ...bounds,
+                width,
+                userSelect: isResizing ? 'none' : 'auto'
+            }}>
 
                 {_(metrics).chain()
                     .map((metric, index) => {
