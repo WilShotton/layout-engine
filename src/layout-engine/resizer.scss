@@ -1,0 +1,24 @@
+
+.resizer {
+
+    background: #666;
+    border-bottom: 6px solid #ccc;
+    border-top: 6px solid #ccc;
+    height: 1px;
+    margin-top: -7px;
+    margin-bottom: -6px;
+
+    text-align: center;
+    user-select: none;
+
+    cursor: pointer;
+    opacity: 0;
+    z-index: 1;
+
+    transition: opacity 400ms;
+
+    &:hover {
+
+        opacity: 0.5;
+    }
+}

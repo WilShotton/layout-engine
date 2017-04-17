@@ -1,29 +1,192 @@
 import _ from 'lodash'
 import React from 'react'
+import Rx from 'rxjs/rx'
+import RxComponent from '../utils/rx-component'
+import Resizer from './resizer'
+import './layout-group.scss'
 
-export default ({
+const MIN_MEASURE = 12
 
-    layout,
-    bounds = {width: 300, height: 300}
+class LayoutGroup extends RxComponent{
 
-}) => {
+    constructor(props) {
 
-    const childHeight = bounds.height / _.size(layout.children)
+        super(props)
 
-    return (
-        <div style={{...bounds, position: 'relative'}}>
-            {_.map(layout.children, (child, index) => {
+        this.createHandlers(['resizeContent', 'resizeWidth'])
 
-                return React.createElement(child.factory, {
-                    key: index,
+        this.state = {
+            metrics: {},
+            width: 0
+        }
+    }
+
+    componentDidMount() {
+
+        const width$ = Rx.Observable
+            .merge(
+
+                this.propAsStream('bounds')
+                    .pluck('width')
+                    .map(update => current => {
+
+                        return {snapshot: update, value: update}
+                    }),
+
+                this.event('resizeContent')
+                    .map(update => current => {
+
+                        return {...current, snapshot: current.value}
+                    }),
+
+                this.event('resizeWidth')
+                    .pluck('clientX')
+                    .switchMap(initial => {
+
+                        return Rx.Observable.fromEvent(document, 'mousemove')
+                            .observeOn(Rx.Scheduler.animationFrame)
+                            .takeUntil(Rx.Observable.fromEvent(document, 'mouseup'))
+                            .pluck('clientX')
+                            .map(current => {
+
+                                return current - initial
+                            })
+                    })
+                    .do(v => console.log('resizeWidth', v))
+                    .map(update => current => {
+
+                        return {...current, value: Math.max(
+                            current.snapshot + update,
+                            MIN_MEASURE
+                        )}
+                    })
+
+            )
+            .scan((acc, update) => update(acc), {})
+            .pluck('value')
+            .map(width => ({width}))
+            .do(v => console.log('resizeWidth', v))
+            // .subscribe(() => {})
+
+        const metrics$ = Rx.Observable
+            .merge(
+
+                this.props$
+                    .map(({bounds, layout}) => current => {
+
+                        const childHeight = bounds.height / _.size(layout.children)
+
+                        return {values: _.map(layout.children, child => {
+
+                            return {
+                                measure: childHeight
+                            }
+                        })}
+                    }),
+
+                this.event('resizeContent')
+                    .map(({index}) => ({values}) => {
+
+                        return {snapshot:_.map(values, value => ({...value})), values}
+                    }),
+
+                this.event('resizeContent')
+                    .switchMap(({index, clientX, clientY}) => {
+
+                        const iX = clientX
+                        const iY = clientY
+
+                        return Rx.Observable.fromEvent(document, 'mousemove')
+                            .observeOn(Rx.Scheduler.animationFrame)
+                            .takeUntil(Rx.Observable.fromEvent(document, 'mouseup'))
+                            .map(e => {
+
+                                return {
+                                    index,
+                                    x: e.clientX - iX,
+                                    y: e.clientY - iY
+                                }
+                            })
+                    })
+                    .map(({index, x, y}) => ({snapshot, values}) => {
+
+                        values[index].measure = Math.max(
+                            snapshot[index].measure + y,
+                            MIN_MEASURE
+                        )
+
+                        return {snapshot, values}
+                    })
+            )
+            .scan((acc, update) => update(acc), {})
+            .pluck('values')
+            .map(metrics => ({metrics}))
+
+        this.addDisposables(
+
+            metrics$.subscribe(this.stateObserver),
+            width$.subscribe(this.stateObserver)
+        )
+    }
+
+    render() {
+
+        const { bounds, layout } = this.props
+
+        const { metrics, width } = this.state
+
+        return (
+            <div className="layout-group" style={{...bounds, width}}>
+
+                {_(metrics).chain()
+                    .map((metric, index) => {
+
+                        return [
+                            React.createElement(layout.children[index].factory, {
+                                key: index,
+                                style: {
+                                    height: metric.measure,
+                                    width
+                                }
+                            }),
+                            React.createElement(Resizer, {
+                                index,
+                                key: `resizer-${index}`,
+                                onMouseDown: e => this.on.resizeContent({...e, index})
+                            })
+                        ]
+                    })
+                    .flatten()
+                    .initial()
+                    .value()
+                }
+
+                <div {...{
+
                     style: {
-                        height: childHeight,
                         position: 'absolute',
-                        top: childHeight * index,
-                        width: bounds.width,
-                    }
-                })
-            })}
-        </div>
-    )
+                        bottom: 6,
+                        right: 0,
+                        top: 0,
+                        width: 6,
+                        cursor: 'pointer',
+                        background: '#ccc',
+                        opacity: 0.5
+                    },
+
+                    onMouseDown: this.on.resizeWidth
+
+                }} />
+
+            </div>
+        )
+    }
 }
+
+LayoutGroup.defaultProps = {
+
+    bounds: {width: 300, height: 300}
+}
+
+export default LayoutGroup
+

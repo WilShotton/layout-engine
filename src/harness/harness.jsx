@@ -9,7 +9,7 @@ const size$ = Rx.Observable.fromEvent(window, 'resize')
 const getBounds = target => {
 
     return {
-        height: target.innerHeight / 2,
+        height: 600, //target.innerHeight / 2,
         width: target.innerWidth / 2
     }
 }

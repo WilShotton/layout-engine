@@ -7,8 +7,12 @@ export default {
     layout: 'vertical',
 
     children: [
-        {factory: Top},
-        {factory: Middle},
-        {factory: Bottom}
+        {
+            factory: Top
+        }, {
+            factory: Middle
+        }, {
+            factory: Bottom
+        }
     ]
 }
