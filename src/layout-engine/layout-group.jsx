@@ -2,6 +2,7 @@ import _ from 'lodash'
 import React from 'react'
 import Rx from 'rxjs/rx'
 import RxComponent from '../utils/rx-component'
+import BoundsResizer from './bounds-resizer'
 import Resizer from './resizer'
 import './layout-group.scss'
 
@@ -55,7 +56,7 @@ class LayoutGroup extends RxComponent{
                     })
                     .map(update => current => {
 
-                        return {...current, bounds: _.pickBy({
+                        return {...current, bounds: {...current.bounds, ..._.pickBy({
                             width: Math.max(
                                 current.snapshot.width + update.dX,
                                 MIN_MEASURE
@@ -64,7 +65,7 @@ class LayoutGroup extends RxComponent{
                                 current.snapshot.height + update.dY,
                                 MIN_MEASURE
                             )
-                        }, _.isFinite)}
+                        }, _.isFinite)}}
                     })
 
             )
@@ -183,22 +184,15 @@ class LayoutGroup extends RxComponent{
                     .value()
                 }
 
-                <div {...{
+                <BoundsResizer {...{
+                    style: {bottom: 6, right: 0, top: 0, width: 6},
+                    onResize: e => this.on.resizeBounds({iX: e.clientX})
+                }}/>
 
-                    style: {
-                        position: 'absolute',
-                        bottom: 6,
-                        right: 0,
-                        top: 0,
-                        width: 6,
-                        cursor: 'pointer',
-                        background: '#ccc',
-                        opacity: 0.5
-                    },
-
-                    onMouseDown: e => this.on.resizeBounds({iX: e.clientX})
-
-                }} />
+                <BoundsResizer {...{
+                    style: {top: bounds.height - 6, right: 6, left: 0, height: 6},
+                    onResize: e => this.on.resizeBounds({iY: e.clientY})
+                }}/>
 
             </div>
         )
