@@ -1,7 +1,7 @@
 import React from 'react'
 import './bounds-resizer.scss'
 
-export default ({
+const BoundsResizer = ({
 
     style,
     onResize
@@ -16,3 +16,7 @@ export default ({
         }} />
     )
 }
+
+BoundsResizer.displayName = 'BoundsResizer'
+
+export default BoundsResizer

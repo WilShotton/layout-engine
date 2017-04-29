@@ -77,7 +77,7 @@ class LayoutGroup extends RxComponent{
             .merge(
 
                 this.props$
-                    .map(({bounds, layout}) => current => {
+                    .map(({bounds, layout}) => () => {
 
                         const childHeight = bounds.height / _.size(layout.children)
 
@@ -119,6 +119,24 @@ class LayoutGroup extends RxComponent{
                             snapshot[index].measure + y,
                             MIN_MEASURE
                         )
+
+                        if (y < 0) {
+
+                            const i = index + 1
+                            const rest = _.slice(values, i)
+                            const offset = (y / _.size(rest))
+
+                            values = _.concat(
+                                _.take(values, i),
+                                _.map(rest, (item, index) => {
+
+                                    return {
+                                        ...item,
+                                        measure: snapshot[i + index].measure - offset
+                                    }
+                                })
+                            )
+                        }
 
                         return {snapshot, values}
                     })
@@ -175,7 +193,7 @@ class LayoutGroup extends RxComponent{
                             React.createElement(Resizer, {
                                 index,
                                 key: `resizer-${index}`,
-                                onMouseDown: e => this.on.resizeContent({...e, index})
+                                onMouseDown: this.on.resizeContent
                             })
                         ]
                     })
@@ -183,16 +201,6 @@ class LayoutGroup extends RxComponent{
                     .initial()
                     .value()
                 }
-
-                <BoundsResizer {...{
-                    style: {bottom: 6, right: 0, top: 0, width: 6},
-                    onResize: e => this.on.resizeBounds({iX: e.clientX})
-                }}/>
-
-                <BoundsResizer {...{
-                    style: {top: bounds.height - 6, right: 6, left: 0, height: 6},
-                    onResize: e => this.on.resizeBounds({iY: e.clientY})
-                }}/>
 
             </div>
         )
@@ -206,3 +214,12 @@ LayoutGroup.defaultProps = {
 
 export default LayoutGroup
 
+// <BoundsResizer {...{
+//     style: {bottom: 6, right: 0, top: 0, width: 6},
+//     onResize: e => this.on.resizeBounds({iX: e.clientX})
+// }}/>
+//
+// <BoundsResizer {...{
+//     style: {top: (bounds.height || 0) - 6, right: 6, left: 0, height: 6},
+//     onResize: e => this.on.resizeBounds({iY: e.clientY})
+// }}/>

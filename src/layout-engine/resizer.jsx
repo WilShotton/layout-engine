@@ -1,19 +1,32 @@
 import React from 'react'
 import './resizer.scss'
 
-export default ({
 
-    index,
-    style,
-    onMouseDown
+class Resizer extends React.PureComponent{
 
-}) => {
+    constructor(props) {
 
-    return (
-        <div {...{
-            className: 'resizer',
-            style,
-            onMouseDown: e => onMouseDown({...e, payload:{ index }})
-        }} />
-    )
+        super(props)
+
+        this.onMouseDown = this.onMouseDown.bind(this)
+    }
+
+    onMouseDown({clientX, clientY}) {
+
+        this.props.onMouseDown({clientX, clientY, index: this.props.index})
+    }
+
+    render() {
+
+        return (
+            <div {...{
+                className: 'resizer',
+                onMouseDown: this.onMouseDown
+            }} />
+        )
+    }
 }
+
+Resizer.displayName = 'Resizer'
+
+export default Resizer
