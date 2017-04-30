@@ -35,8 +35,6 @@ class RxComponent extends React.Component{
             }
         )
 
-        console.log('Rx', Rx)
-
         this.stateObserver = Rx.Subscriber.create(
             state => {
                 this.setState(state)

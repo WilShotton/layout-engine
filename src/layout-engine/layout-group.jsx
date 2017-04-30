@@ -6,7 +6,7 @@ import BoundsResizer from './bounds-resizer'
 import Resizer from './resizer'
 import './layout-group.scss'
 
-const MIN_MEASURE = 12
+const MIN_MEASURE = 24
 
 class LayoutGroup extends RxComponent{
 
@@ -79,6 +79,8 @@ class LayoutGroup extends RxComponent{
                 this.props$
                     .map(({bounds, layout}) => () => {
 
+                    console.log('bounds', bounds)
+
                         const childHeight = bounds.height / _.size(layout.children)
 
                         return {values: _.map(layout.children, child => {
@@ -106,7 +108,7 @@ class LayoutGroup extends RxComponent{
                             .takeUntil(Rx.Observable.fromEvent(document, 'mouseup'))
                             .map(e => {
 
-                                return {
+                                    return {
                                     index,
                                     x: e.clientX - iX,
                                     y: e.clientY - iY
@@ -115,30 +117,56 @@ class LayoutGroup extends RxComponent{
                     })
                     .map(({index, x, y}) => ({snapshot, values}) => {
 
-                        values[index].measure = Math.max(
+                        const offset = y / (_.size(values) - index - 1)
+
+                        const targetMeasure = Math.max(
                             snapshot[index].measure + y,
                             MIN_MEASURE
                         )
 
-                        if (y < 0) {
+                        return {
+                            snapshot,
+                            values: _.map(values, (value, i) => {
 
-                            const i = index + 1
-                            const rest = _.slice(values, i)
-                            const offset = (y / _.size(rest))
+                                if (i < index) {
+                                    return value
+                                }
 
-                            values = _.concat(
-                                _.take(values, i),
-                                _.map(rest, (item, index) => {
+                                if (i === index) {
 
                                     return {
-                                        ...item,
-                                        measure: snapshot[i + index].measure - offset
+                                        ...value,
+                                        measure: targetMeasure
                                     }
-                                })
-                            )
-                        }
+                                }
 
-                        return {snapshot, values}
+                                if (targetMeasure === MIN_MEASURE) {
+                                    return value
+                                }
+
+                                // console.log('???', targetMeasure === MIN_MEASURE)
+
+                                const measure = snapshot[i].measure
+
+                                const foo = measure - offset
+
+                                // console.log('offset', offset)
+                                // console.log('foo', foo)
+                                // console.log(' ')
+
+                                return {
+                                    ...value,
+                                    // measure: i === index ? measure + y : measure - offset
+
+                                    measure: Math.max(
+                                        foo,
+                                        MIN_MEASURE
+                                    )
+
+                                    //measure: foo
+                                }
+                            })
+                        }
                     })
             )
             .scan((acc, update) => update(acc), {})
