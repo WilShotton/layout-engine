@@ -115,9 +115,56 @@ class LayoutGroup extends RxComponent{
                                 }
                             })
                     })
+                    .do(() => {
+
+                        const min = 20
+                        const items = [40, 80, 10]
+                        const total = 100
+
+
+                        const add = (a, b) => a + b
+
+
+                        const freeItems = _.filter(items, item => item > min)
+                        const freeItemCount = _.size(freeItems)
+                        const freeItemTotal = _.reduce(freeItems, add, 0)
+
+                        const fixed = (_.size(items) - freeItemCount) * min
+
+                        const outstanding = total - fixed
+
+                        const out = _.map(items, item => {
+
+                            return Math.max(min, item / freeItemTotal * outstanding)
+                        })
+
+                        
+                    })
                     .map(({index, x, y}) => ({snapshot, values}) => {
 
-                        const offset = y / (_.size(values) - index - 1)
+                        const sliced = _.slice(values, index + 1)
+                        console.log('sliced', sliced)
+
+                        const totalHeight = _.reduce(sliced, (acc, {measure}) => {
+
+                            return acc + measure
+
+                        }, 0)
+
+                        // const AAA = _.filter(values, v => v.measure === MIN_MEASURE)
+                        //
+                        // console.log('totalHeight', totalHeight)
+                        //
+                        // const totalHeight2 = (totalHeight - (_.size(AAA) * MIN_MEASURE))
+                        //
+                        // console.log('totalHeight2', totalHeight2)
+                        //
+                        // // const totalHeight3 = totalHeight2 <= 0
+                        // //     ? totalHeight
+                        // //     : totalHeight2
+
+
+                        console.log(' ')
 
                         const targetMeasure = Math.max(
                             snapshot[index].measure + y,
@@ -128,7 +175,7 @@ class LayoutGroup extends RxComponent{
                             snapshot,
                             values: _.map(values, (value, i) => {
 
-                                if (i < index) {
+                                if (i < index || targetMeasure === MIN_MEASURE) {
                                     return value
                                 }
 
@@ -140,30 +187,18 @@ class LayoutGroup extends RxComponent{
                                     }
                                 }
 
-                                if (targetMeasure === MIN_MEASURE) {
-                                    return value
-                                }
+                                const pc = value.measure / totalHeight
 
-                                // console.log('???', targetMeasure === MIN_MEASURE)
-
-                                const measure = snapshot[i].measure
-
-                                const foo = measure - offset
-
-                                // console.log('offset', offset)
-                                // console.log('foo', foo)
-                                // console.log(' ')
+                                // console.log('pc', pc)
+                                console.log('pc', (snapshot[i].measure - (y * pc)))
 
                                 return {
                                     ...value,
-                                    // measure: i === index ? measure + y : measure - offset
-
                                     measure: Math.max(
-                                        foo,
+                                        snapshot[i].measure - (y * pc),
+                                        // snapshot[i].measure - offset,
                                         MIN_MEASURE
                                     )
-
-                                    //measure: foo
                                 }
                             })
                         }
