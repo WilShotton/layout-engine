@@ -18,22 +18,14 @@ class RxComponent extends React.Component{
 
         this.props$ = this.__propsSubject.startWith(this.props)
 
-        this.propAsStream = _.memoize(
+        this.propAsStream = (key, filter=propAsStreamFilter) => {
 
-            (key, filter=propAsStreamFilter) => {
-
-                return this.props$
-                    .pluck(key)
-                    .let(filter)
-                    .startWith(this.props[key])
-                    .share()
-            },
-
-            (key, filter) => {
-
-                return `${key}-${String(filter)}`
-            }
-        )
+            return this.props$
+                .pluck(key)
+                .let(filter)
+                .startWith(this.props[key])
+                .share()
+        }
 
         this.stateObserver = Rx.Subscriber.create(
             state => {
