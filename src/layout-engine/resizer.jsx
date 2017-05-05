@@ -2,16 +2,16 @@ import React from 'react'
 import './resizer.scss'
 
 
-class Resizer extends React.PureComponent{
+export default class Resizer extends React.PureComponent {
 
-    constructor(props) {
+    displayName = 'Resizer'
 
-        super(props)
+    onDoubleClick = () => {
 
-        this.onMouseDown = this.onMouseDown.bind(this)
+        this.props.onDoubleClick({index: this.props.index})
     }
 
-    onMouseDown({clientX, clientY}) {
+    onMouseDown = ({clientX, clientY}) => {
 
         this.props.onMouseDown({clientX, clientY, index: this.props.index})
     }
@@ -21,12 +21,9 @@ class Resizer extends React.PureComponent{
         return (
             <div {...{
                 className: 'resizer',
+                onDoubleClick: this.onDoubleClick,
                 onMouseDown: this.onMouseDown
             }} />
         )
     }
 }
-
-Resizer.displayName = 'Resizer'
-
-export default Resizer
