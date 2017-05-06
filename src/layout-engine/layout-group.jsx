@@ -11,9 +11,20 @@ const MIN_MEASURE = 24
 
 export default class LayoutGroup extends RxComponent{
 
+    static propTypes = {
+        bounds: React.PropTypes.object,
+        doc: React.PropTypes.object,
+        layout: React.PropTypes.shape({
+            layout: React.PropTypes.oneOf(['vertical', 'horizontal']).isRequired,
+            children: React.PropTypes.arrayOf(React.PropTypes.shape({
+                factory: React.PropTypes.func.isRequired
+            })).isRequired
+        }).isRequired,
+    }
+
     static defaultProps = {
 
-        bounds: {width: 300, height: 300},
+        bounds: {width: 200, height: 200},
         doc: document
     }
 
@@ -53,9 +64,9 @@ export default class LayoutGroup extends RxComponent{
                         this.propAsStream('bounds'),
                         ({index}, bounds) => current => {
 
-                            const maxMeasure = bounds.height - ((_.size(current.snapshot) - 1) * MIN_MEASURE)
+                            const maxMeasure = bounds.height - ((_.size(current.values) - 1) * MIN_MEASURE)
 
-                            const update = _.map(current.snapshot, (item, i) => {
+                            const update = _.map(current.values, (item, i) => {
                                 return {
                                     ...item,
                                     measure: i === index ? maxMeasure : MIN_MEASURE,
