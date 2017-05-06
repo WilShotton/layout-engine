@@ -2,6 +2,7 @@ import _ from 'lodash'
 import React from 'react'
 import Rx from 'rxjs/rx'
 import RxComponent from '../utils/rx-component'
+import Maximiser from './maximiser'
 import Resizer from './resizer'
 import './layout-group.scss'
 
@@ -176,6 +177,11 @@ export default class LayoutGroup extends RxComponent{
                     .map((metric, index) => {
 
                         return [
+                            React.createElement(Maximiser, {
+                                index,
+                                key: `maximiser-${index}`,
+                                onDoubleClick: this.on.maximiseContent
+                            }),
                             React.createElement(layout.children[index].factory, {
                                 key: index,
                                 style: {
@@ -187,7 +193,6 @@ export default class LayoutGroup extends RxComponent{
                             React.createElement(Resizer, {
                                 index,
                                 key: `resizer-${index}`,
-                                onDoubleClick: this.on.maximiseContent,
                                 onMouseDown: this.on.resizeContent
                             })
                         ]
