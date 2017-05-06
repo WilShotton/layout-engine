@@ -1,7 +1,8 @@
 import React from 'react'
 import Rx from 'rxjs/rx'
 import LayoutGroup from '../layout-engine/layout-group'
-import layout from './layout'
+import HorizontalLayout from './horizontal-layout'
+import VerticalLayout from './vertical-layout'
 
 const size$ = Rx.Observable.fromEvent(window, 'resize')
     .debounceTime(30)
@@ -9,7 +10,7 @@ const size$ = Rx.Observable.fromEvent(window, 'resize')
 const getBounds = target => {
 
     return {
-        height: 600, //target.innerHeight / 2,
+        height: 300, //target.innerHeight / 2,
         width: target.innerWidth / 2
     }
 }
@@ -47,7 +48,12 @@ export default React.createClass({
 
                 <LayoutGroup {...{
                     bounds: this.state.bounds,
-                    layout
+                    layout: HorizontalLayout
+                }} />
+
+                <LayoutGroup {...{
+                    bounds: this.state.bounds,
+                    layout: VerticalLayout
                 }} />
 
             </div>

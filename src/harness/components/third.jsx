@@ -8,6 +8,6 @@ export default ({
 }) => {
 
     return (
-        <div className="component" style={style}>Top</div>
+        <div className="component" style={style}>Third</div>
     )
 }
