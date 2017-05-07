@@ -1,12 +1,22 @@
 
 .component {
 
+    overflow: hidden;
+
     align-items: center;
     display: flex;
     justify-content: center;
 
     background: white;
-
-    border-bottom: 1px dashed red;
     box-sizing: border-box;
+
+    &.horizontal {
+
+        border-right: 1px dashed red;
+    }
+
+    &.vertical {
+
+        border-bottom: 1px dashed red;
+    }
 }

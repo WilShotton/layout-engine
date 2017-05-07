@@ -20,7 +20,7 @@ export default class Resizer extends React.PureComponent {
 
         return (
             <div {...{
-                className: 'resizer',
+                className: `resizer ${this.props.className}`,
                 onDoubleClick: this.onDoubleClick,
                 onMouseDown: this.onMouseDown
             }} />

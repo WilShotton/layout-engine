@@ -43,28 +43,53 @@ export default class LayoutGroup extends RxComponent{
 
     componentDidMount() {
 
+        const measure$ = this.propAsStream('bounds')
+            .map(bounds => {
+
+                if (this.props.layout.layout === 'vertical') {
+                    return bounds.height
+                }
+
+                return bounds.width
+            })
+            .publishReplay(1)
+            .refCount()
+
+        const eventToMeasure = ({clientX, clientY}) => {
+
+            if (this.props.layout.layout === 'vertical') {
+                return clientY
+            }
+
+            return clientX
+        }
+
         const metrics$ = Rx.Observable
             .merge(
 
-                this.props$
-                    .map(({bounds, layout}) => () => {
+                Rx.Observable
+                    .combineLatest(
+                        measure$,
+                        this.propAsStream('layout'),
+                        (measure, layout) => () => {
 
-                        const childHeight = bounds.height / _.size(layout.children)
+                            const childMeasure = measure / _.size(layout.children)
 
-                        return {values: _.map(layout.children, child => {
+                            return {values: _.map(layout.children, child => {
 
-                            return {
-                                measure: childHeight
-                            }
-                        })}
-                    }),
+                                return {
+                                    measure: childMeasure
+                                }
+                            })}
+                        }
+                    ),
 
                 this.event('maximiseContent')
                     .withLatestFrom(
-                        this.propAsStream('bounds'),
-                        ({index}, bounds) => current => {
+                        measure$,
+                        ({index}, measure) => current => {
 
-                            const maxMeasure = bounds.height - ((_.size(current.values) - 1) * MIN_MEASURE)
+                            const maxMeasure = measure - ((_.size(current.values) - 1) * MIN_MEASURE)
 
                             const update = _.map(current.values, (item, i) => {
                                 return {
@@ -89,26 +114,26 @@ export default class LayoutGroup extends RxComponent{
                     }),
 
                 this.event('resizeContent')
-                    .switchMap(({index, clientX, clientY}) => {
+                    .map(e => {
 
-                        const iX = clientX
-                        const iY = clientY
+                        return {index: e.index, iM: eventToMeasure(e)}
+                    })
+                    .switchMap(({index, iM}) => {
 
                         return Rx.Observable.fromEvent(this.props.doc, 'mousemove')
                             .observeOn(Rx.Scheduler.animationFrame)
                             .takeUntil(Rx.Observable.fromEvent(this.props.doc, 'mouseup'))
                             .map(e => {
 
-                                    return {
+                                return {
                                     index,
-                                    x: e.clientX - iX,
-                                    y: e.clientY - iY
+                                    delta: eventToMeasure(e) - iM
                                 }
                             })
                     })
                     .withLatestFrom(
-                        this.propAsStream('bounds'),
-                        ({index, x, y}, {width, height}) => ({snapshot, values}) => {
+                        measure$,
+                        ({index, delta}, measure) => ({snapshot, values}) => {
 
                             const add = (acc, {measure}) => acc + measure
 
@@ -117,7 +142,7 @@ export default class LayoutGroup extends RxComponent{
                             const current = {
                                 ...values[index],
                                 measure: Math.max(
-                                    snapshot[index].measure + y,
+                                    snapshot[index].measure + delta,
                                     MIN_MEASURE
                                 )
                             }
@@ -125,7 +150,7 @@ export default class LayoutGroup extends RxComponent{
                             const after = _.slice(values, index + 1)
 
                             const initialAfterHeight = _.reduce(after, add, 0)
-                            const updatedAfterHeight = height - _.reduce(before, add, 0) - current.measure
+                            const updatedAfterHeight = measure - _.reduce(before, add, 0) - current.measure
 
                             const update = _.concat(before, current, _.map(after, value => {
 
@@ -159,10 +184,7 @@ export default class LayoutGroup extends RxComponent{
                 this.propAsStream('bounds'),
                 isResizing$.map(isResizing => {
                     return isResizing
-                        ? {
-                            userSelect: 'none',
-                            overflowY: 'hidden'
-                        }
+                        ? {userSelect: 'none'}
                         : {}
                 }),
                 (bounds, isResizing) => ({...bounds, ...isResizing})
@@ -178,30 +200,44 @@ export default class LayoutGroup extends RxComponent{
 
     render() {
 
-        const { bounds, layout } = this.props
+        const { layout } = this.props
         const { style, metrics } = this.state
 
         return (
-            <div className="layout-group" style={style}>
+            <div className={`layout-group ${layout.layout}`} style={style}>
 
                 {_(metrics).chain()
                     .map((metric, index) => {
 
                         return [
                             React.createElement(Maximiser, {
+                                className: layout.layout,
                                 index,
                                 key: `maximiser-${index}`,
+                                style: {
+                                    width: layout.layout === 'vertical'
+                                        ? style.width
+                                        : metric.measure
+                                },
                                 onDoubleClick: this.on.maximiseContent
                             }),
                             React.createElement(layout.children[index].factory, {
+                                ...layout.children[index].props,
                                 key: index,
-                                style: {
-                                    ...metric.style,
-                                    height: metric.measure,
-                                    width: bounds.width
-                                }
+                                style: layout.layout === 'vertical'
+                                    ? {
+                                        ...metric.style,
+                                        height: metric.measure,
+                                        width: style.width
+                                    }
+                                    : {
+                                        ...metric.style,
+                                        height: style.height,
+                                        width: metric.measure
+                                    }
                             }),
                             React.createElement(Resizer, {
+                                className: layout.layout,
                                 index,
                                 key: `resizer-${index}`,
                                 onMouseDown: this.on.resizeContent

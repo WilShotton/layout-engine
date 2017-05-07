@@ -4,15 +4,18 @@ import Third from './components/third'
 
 export default {
 
-    layout: 'vertical',
+    layout: 'horizontal',
 
     children: [
         {
-            factory: First
+            factory: First,
+            props: {className: 'horizontal'}
         }, {
-            factory: Second
+            factory: Second,
+            props: {className: 'horizontal'}
         }, {
-            factory: Third
+            factory: Third,
+            props: {className: 'horizontal'}
         }
     ]
 }

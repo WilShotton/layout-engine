@@ -44,12 +44,14 @@ export default React.createClass({
         return (
             <div style={{}}>
 
-                <h1>Harness</h1>
+                <h3>Horizontal</h3>
 
                 <LayoutGroup {...{
                     bounds: this.state.bounds,
                     layout: HorizontalLayout
                 }} />
+
+                <h3>Vertical</h3>
 
                 <LayoutGroup {...{
                     bounds: this.state.bounds,

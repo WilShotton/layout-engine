@@ -15,8 +15,8 @@ export default class Maximiser extends React.PureComponent {
 
         return (
             <div {...{
-                children: <div className="options"/>,
-                className: 'maximiser',
+                children: <div className="options" style={this.props.style} />,
+                className: `maximiser ${this.props.className}`,
                 onDoubleClick: this.onDoubleClick
             }} />
         )

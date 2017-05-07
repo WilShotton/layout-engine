@@ -8,11 +8,14 @@ export default {
 
     children: [
         {
-            factory: First
+            factory: First,
+            props: {className: 'vertical'}
         }, {
-            factory: Second
+            factory: Second,
+            props: {className: 'vertical'}
         }, {
-            factory: Third
+            factory: Third,
+            props: {className: 'vertical'}
         }
     ]
 }

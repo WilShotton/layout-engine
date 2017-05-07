@@ -24,7 +24,8 @@ class RxComponent extends React.Component{
                 .pluck(key)
                 .let(filter)
                 .startWith(this.props[key])
-                .share()
+                .publishReplay(1)
+                .refCount()
         }
 
         this.stateObserver = Rx.Subscriber.create(

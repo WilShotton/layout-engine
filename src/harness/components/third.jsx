@@ -3,11 +3,12 @@ import './component.scss'
 
 export default ({
 
+    className,
     style
 
 }) => {
 
     return (
-        <div className="component" style={style}>Third</div>
+        <div className={`component ${className}`} style={style}>Third</div>
     )
 }
