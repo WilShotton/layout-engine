@@ -95,7 +95,7 @@ export default class LayoutGroup extends RxComponent{
                                 return {
                                     ...item,
                                     measure: i === index ? maxMeasure : MIN_MEASURE,
-                                    style: {transition: 'height 200ms'}
+                                    style: {transition: 'width 200ms, height 200ms'}
                                 }
                             })
 
@@ -139,22 +139,27 @@ export default class LayoutGroup extends RxComponent{
 
                             const before = _.slice(values, 0, index)
 
+                            const after = _.slice(values, index + 1)
+
+                            const beforeMeasure = _.reduce(before, add, 0)
+
+                            const maxMeasure = measure - beforeMeasure - (_.size(after) * MIN_MEASURE)
+
                             const current = {
                                 ...values[index],
-                                measure: Math.max(
+                                measure: _.clamp(
                                     snapshot[index].measure + delta,
-                                    MIN_MEASURE
+                                    MIN_MEASURE,
+                                    maxMeasure
                                 )
                             }
 
-                            const after = _.slice(values, index + 1)
-
-                            const initialAfterHeight = _.reduce(after, add, 0)
-                            const updatedAfterHeight = measure - _.reduce(before, add, 0) - current.measure
+                            const initialAfterMeasure = _.reduce(after, add, 0)
+                            const updatedAfterMeasure = measure - beforeMeasure - current.measure
 
                             const update = _.concat(before, current, _.map(after, value => {
 
-                                const measure = Math.floor(value.measure  / initialAfterHeight * updatedAfterHeight)
+                                const measure = Math.floor(value.measure  / initialAfterMeasure * updatedAfterMeasure)
 
                                 return {
                                     ...value,
