@@ -19,7 +19,7 @@ export default class LayoutGroup extends RxComponent{
             children: React.PropTypes.arrayOf(React.PropTypes.shape({
                 factory: React.PropTypes.func.isRequired
             })).isRequired
-        }).isRequired,
+        }).isRequired
     }
 
     static defaultProps = {
@@ -27,6 +27,8 @@ export default class LayoutGroup extends RxComponent{
         bounds: {width: 200, height: 200},
         doc: document
     }
+
+    displayName = 'LayoutGroup'
 
     constructor(props) {
 
@@ -196,6 +198,9 @@ export default class LayoutGroup extends RxComponent{
             )
 
         this.addDisposables(
+
+            this.event('resizeContent')
+                .subscribe(() => this.props.doc.getSelection().removeAllRanges()),
 
             Rx.Observable
                 .merge(metrics$.map(metrics => ({metrics})), style$.map(style => ({style})))

@@ -2,23 +2,15 @@
 .layout-group {
 
     display: flex;
+    overflow: hidden;
 
     position: relative;
 
     background: #ffeeee;
     border: 1px solid red;
 
-    &.horizontal {
-
-        overflow-x: auto;
-        overflow-y: hidden;
-    }
-
     &.vertical {
 
         flex-direction: column;
-
-        overflow-x: hidden;
-        overflow-y: auto;
     }
 }
