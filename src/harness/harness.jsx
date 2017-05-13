@@ -51,6 +51,7 @@ export default React.createClass({
                     layout: HorizontalLayout
                 }} />
 
+
                 <h3>Vertical</h3>
 
                 <LayoutGroup {...{

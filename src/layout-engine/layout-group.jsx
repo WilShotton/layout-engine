@@ -75,14 +75,32 @@ export default class LayoutGroup extends RxComponent{
                         this.propAsStream('layout'),
                         (measure, layout) => () => {
 
-                            const childMeasure = measure / _.size(layout.children)
+                            const fixed = _(layout.children)
+                                .map('measure')
+                                .filter(_.isFinite)
+                                .value()
 
-                            return {values: _.map(layout.children, child => {
+                            const fixedCount = _.size(fixed)
 
-                                return {
-                                    measure: childMeasure
-                                }
-                            })}
+                            const fixedMeasure = _.reduce(fixed, _.add, 0)
+
+                            const defaultMeasure = (measure - fixedMeasure) / (_.size(layout.children) - fixedCount)
+
+                            const minMeasures = _.map(layout.children, child => {
+                                return _.isFinite(child.minMeasure)
+                                    ? child.minMeasure
+                                    : MIN_MEASURE
+                            })
+
+                            return {
+                                combinedMinMeasure: minMeasures.reduce(_.add, 0),
+                                values: _.map(layout.children, (child, index) => {
+                                    return {
+                                        measure: _.isFinite(child.measure) ? child.measure : defaultMeasure,
+                                        minMeasure: minMeasures[index]
+                                    }
+                                })
+                            }
                         }
                     ),
 
@@ -91,28 +109,29 @@ export default class LayoutGroup extends RxComponent{
                         measure$,
                         ({index}, measure) => current => {
 
-                            const maxMeasure = measure - ((_.size(current.values) - 1) * MIN_MEASURE)
+                            const aggregatedMinMeasure = current.combinedMinMeasure - current.values[index].minMeasure
+                            const maxMeasure = measure - aggregatedMinMeasure
 
                             const update = _.map(current.values, (item, i) => {
                                 return {
                                     ...item,
-                                    measure: i === index ? maxMeasure : MIN_MEASURE,
+                                    measure: i === index ? maxMeasure : item.minMeasure,
                                     style: {transition: 'width 200ms, height 200ms'}
                                 }
                             })
 
-                            return {snapshot: update, values: update}
+                            return {...current, snapshot: update, values: update}
                         }
                     ),
 
                 this.event('resizeContent')
-                    .map(({index}) => ({values}) => {
+                    .map(({index}) => current => {
 
-                        const update = _.map(values, value => {
+                        const update = _.map(current.values, value => {
                             return {...value, style: {}}
                         })
 
-                        return {snapshot: update, values: update}
+                        return {...current, snapshot: update, values: update}
                     }),
 
                 this.event('resizeContent')
@@ -135,31 +154,34 @@ export default class LayoutGroup extends RxComponent{
                     })
                     .withLatestFrom(
                         measure$,
-                        ({index, delta}, measure) => ({snapshot, values}) => {
+                        ({index, delta}, measure) => current => {
+
+                            const { snapshot, values } = current
 
                             const add = (acc, {measure}) => acc + measure
 
                             const before = _.slice(values, 0, index)
 
-                            const after = _.slice(values, index + 1)
-
                             const beforeMeasure = _.reduce(before, add, 0)
 
-                            const maxMeasure = measure - beforeMeasure - (_.size(after) * MIN_MEASURE)
+                            const after = _.slice(values, index + 1)
 
-                            const current = {
+                            const afterMinMeasure = _(after).map('minMeasure').reduce(_.add, 0)
+                            const maxMeasure = measure - beforeMeasure - afterMinMeasure
+
+                            const target = {
                                 ...values[index],
                                 measure: _.clamp(
                                     snapshot[index].measure + delta,
-                                    MIN_MEASURE,
+                                    snapshot[index].minMeasure,
                                     maxMeasure
                                 )
                             }
 
                             const initialAfterMeasure = _.reduce(after, add, 0)
-                            const updatedAfterMeasure = measure - beforeMeasure - current.measure
+                            const updatedAfterMeasure = measure - beforeMeasure - target.measure
 
-                            const update = _.concat(before, current, _.map(after, value => {
+                            const update = _.concat(before, target, _.map(after, value => {
 
                                 const measure = Math.floor(value.measure  / initialAfterMeasure * updatedAfterMeasure)
 
@@ -169,12 +191,13 @@ export default class LayoutGroup extends RxComponent{
                                 }
                             }))
 
-                            return {snapshot, values: update}
+                            return {...current, snapshot, values: update}
                         }
                     )
             )
             .scan((acc, update) => update(acc), {})
             .pluck('values')
+            .share()
 
         const resizeStart$ = this.event('resizeContent')
 
@@ -212,8 +235,6 @@ export default class LayoutGroup extends RxComponent{
 
         const { layout } = this.props
         const { style, metrics } = this.state
-
-        console.log('styles', styles)
 
         return (
             <div className={`${styles.root} ${styles[layout.layout]}`} style={style}>

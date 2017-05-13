@@ -9,7 +9,8 @@ export default {
     children: [
         {
             factory: First,
-            props: {className: 'horizontal'}
+            props: {className: 'horizontal'},
+            measure: 60
         }, {
             factory: Second,
             props: {className: 'horizontal'}
