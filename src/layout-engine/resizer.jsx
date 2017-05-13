@@ -1,5 +1,5 @@
 import React from 'react'
-import './resizer.scss'
+import styles from './resizer.scss'
 
 
 export default class Resizer extends React.PureComponent {
@@ -20,7 +20,7 @@ export default class Resizer extends React.PureComponent {
 
         return (
             <div {...{
-                className: `resizer ${this.props.className}`,
+                className: `${styles.resizer} ${styles[this.props.className]}`,
                 onDoubleClick: this.onDoubleClick,
                 onMouseDown: this.onMouseDown
             }} />

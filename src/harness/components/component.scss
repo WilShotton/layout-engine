@@ -10,13 +10,14 @@
     background: white;
     box-sizing: border-box;
 
-    &.horizontal {
+}
 
-        border-right: 1px dashed red;
-    }
+.horizontal {
 
-    &.vertical {
+    border-right: 1px dashed red;
+}
 
-        border-bottom: 1px dashed red;
-    }
+.vertical {
+
+    border-bottom: 1px dashed red;
 }

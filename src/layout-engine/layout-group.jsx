@@ -4,7 +4,7 @@ import Rx from 'rxjs/rx'
 import RxComponent from '../utils/rx-component'
 import Maximiser from './maximiser'
 import Resizer from './resizer'
-import './layout-group.scss'
+import styles from './layout-group.scss'
 
 
 const MIN_MEASURE = 24
@@ -213,8 +213,10 @@ export default class LayoutGroup extends RxComponent{
         const { layout } = this.props
         const { style, metrics } = this.state
 
+        console.log('styles', styles)
+
         return (
-            <div className={`layout-group ${layout.layout}`} style={style}>
+            <div className={`${styles.root} ${styles[layout.layout]}`} style={style}>
 
                 {_(metrics).chain()
                     .map((metric, index) => {

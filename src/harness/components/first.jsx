@@ -1,5 +1,5 @@
 import React from 'react'
-import './component.scss'
+import styles from './component.scss'
 
 export default ({
 
@@ -9,6 +9,8 @@ export default ({
 }) => {
 
     return (
-        <div className={`component ${className}`} style={style}>First</div>
+        <div className={`${styles.component} ${styles[className]}`} style={style}>First</div>
     )
 }
+
+        // <div className={`component ${className}`} style={style}>First</div>

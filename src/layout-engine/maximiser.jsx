@@ -1,5 +1,5 @@
 import React from 'react'
-import './maximiser.scss'
+import styles from './maximiser.scss'
 
 
 export default class Maximiser extends React.PureComponent {
@@ -15,8 +15,8 @@ export default class Maximiser extends React.PureComponent {
 
         return (
             <div {...{
-                children: <div className="options" style={this.props.style} />,
-                className: `maximiser ${this.props.className}`,
+                children: <div className={styles.options} style={this.props.style} />,
+                className: `${styles.maximiser} ${this.props.className}`,
                 onDoubleClick: this.onDoubleClick
             }} />
         )

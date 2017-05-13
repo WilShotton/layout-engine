@@ -1,5 +1,5 @@
 
-.layout-group {
+.root {
 
     display: flex;
     overflow: hidden;
@@ -8,9 +8,14 @@
 
     background: #ffeeee;
     border: 1px solid red;
+}
 
-    &.vertical {
+.horizontal {
 
-        flex-direction: column;
-    }
+    flex-direction: row;
+}
+
+.vertical {
+
+    flex-direction: column;
 }

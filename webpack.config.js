@@ -45,7 +45,13 @@ module.exports = {
                     fallbackLoader: 'style-loader',
                     loader: [
                         {
-                            loader: 'css-loader'
+                            loader: 'css-loader',
+                            query: {
+                                modules: true,
+                                sourceMap: true,
+                                importLoaders: 2,
+                                localIdentName: '[name]__[local]___[hash:base64:5]'
+                            }
                         }, {
                             loader: 'postcss-loader'
                         }, {
