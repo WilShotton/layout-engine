@@ -197,11 +197,12 @@ export default class LayoutGroup extends RxComponent{
             )
             .scan((acc, update) => update(acc), {})
             .pluck('values')
-            .share()
 
-        const resizeStart$ = this.event('resizeContent')
+        const resizeStart$ = this.event('resizeContent').switchMap(() => {
+            return Rx.Observable.fromEvent(this.props.doc, 'mousemove').take(1)
+        })
 
-        const resizeFinish$ = resizeStart$.flatMap(() => {
+        const resizeFinish$ = resizeStart$.switchMap(() => {
             return Rx.Observable.fromEvent(this.props.doc, 'mouseup').take(1)
         })
 
@@ -209,35 +210,34 @@ export default class LayoutGroup extends RxComponent{
             .merge(resizeStart$.mapTo(true), resizeFinish$.mapTo(false))
             .startWith(false)
 
-        const style$ = Rx.Observable
-            .combineLatest(
-                this.propAsStream('bounds'),
-                isResizing$.map(isResizing => {
-                    return isResizing
-                        ? {userSelect: 'none'}
-                        : {}
-                }),
-                (bounds, isResizing) => ({...bounds, ...isResizing})
-            )
-
         this.addDisposables(
 
-            this.event('resizeContent')
-                .subscribe(() => this.props.doc.getSelection().removeAllRanges()),
+            isResizing$.map(isResizing => isResizing ? 'add' : 'remove')
+                .subscribe(action => {
 
-            Rx.Observable
-                .merge(metrics$.map(metrics => ({metrics})), style$.map(style => ({style})))
+                    this.props.doc.body.classList[action]('resizing')
+                }),
+
+            resizeStart$.subscribe(() => this.props.doc.getSelection().removeAllRanges()),
+
+            metrics$.map(metrics => ({metrics}))
                 .subscribe(this.stateObserver)
         )
     }
 
+    shouldComponentUpdate(nextProps, nextState) {
+
+        return !_.isEqual(nextProps, this.props)
+            || !_.isEqual(nextState, this.state)
+    }
+
     render() {
 
-        const { layout } = this.props
-        const { style, metrics } = this.state
+        const { bounds, layout } = this.props
+        const { metrics } = this.state
 
         return (
-            <div className={`${styles.root} ${styles[layout.layout]}`} style={style}>
+            <div className={`${styles.root} ${styles[layout.layout]}`} style={bounds}>
 
                 {_(metrics).chain()
                     .map((metric, index) => {
@@ -249,7 +249,7 @@ export default class LayoutGroup extends RxComponent{
                                 key: `maximiser-${index}`,
                                 style: {
                                     width: layout.layout === 'vertical'
-                                        ? style.width
+                                        ? bounds.width
                                         : metric.measure
                                 },
                                 onDoubleClick: this.on.maximiseContent
@@ -261,11 +261,11 @@ export default class LayoutGroup extends RxComponent{
                                     ? {
                                         ...metric.style,
                                         height: metric.measure,
-                                        width: style.width
+                                        width: bounds.width
                                     }
                                     : {
                                         ...metric.style,
-                                        height: style.height,
+                                        height: bounds.height,
                                         width: metric.measure
                                     }
                             }),

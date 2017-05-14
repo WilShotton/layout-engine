@@ -19,3 +19,8 @@
 
     flex-direction: column;
 }
+
+:global(.resizing) {
+
+    user-select: none;
+}
