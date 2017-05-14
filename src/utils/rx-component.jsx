@@ -2,7 +2,7 @@ import _ from 'lodash'
 import React from 'react'
 import Rx from 'rxjs/rx'
 
-const propAsStreamFilter = stream$ => stream$.distinctUntilChanged(_.identity, _.isEqual)
+const propAsStreamFilter = stream$ => stream$.distinctUntilChanged(_.isEqual)
 
 class RxComponent extends React.Component{
 
@@ -22,8 +22,8 @@ class RxComponent extends React.Component{
 
             return this.props$
                 .pluck(key)
-                .let(filter)
                 .startWith(this.props[key])
+                .let(filter)
                 .publishReplay(1)
                 .refCount()
         }
